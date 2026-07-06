@@ -15,7 +15,9 @@
       --text-sub: #99bb99;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -338,6 +340,26 @@
       width: 50%;
     }
 
+    .aggro-row .aggro-name {
+      flex: 1.2;
+      min-width: 0;
+      width: auto;
+    }
+
+    .aggro-row .aggro-value {
+      flex: 0.8;
+      min-width: 0;
+      width: auto;
+    }
+
+    .aggro-remove {
+      flex: 0 0 auto;
+      width: 2.6rem;
+      padding: 0.75rem 0;
+      margin-top: 0;
+      line-height: 1;
+    }
+
     #notesText {
       width: 100%;
       height: calc(100% - 4.5rem);
@@ -486,8 +508,15 @@
         gap: 0;
       }
 
-      .aggro-row input {
+      .aggro-row input,
+      .aggro-row .aggro-name,
+      .aggro-row .aggro-value {
         width: 100%;
+      }
+
+      .aggro-remove {
+        width: 100%;
+        margin-top: 0.4rem;
       }
     }
   </style>
@@ -985,10 +1014,21 @@
 
       row.innerHTML = `
         <input type="text" class="aggro-name" placeholder="Имя">
-        <input type="number" class="aggro-value" placeholder="Значение агро">
+        <input type="number" class="aggro-value" placeholder="Агро">
+        <button type="button" class="aggro-remove" onclick="removeAggroRow(this)" title="Убрать цель">×</button>
       `;
 
       container.appendChild(row);
+    }
+
+    function removeAggroRow(button) {
+      const row = button.closest('.aggro-row');
+
+      if (row) {
+        row.remove();
+      }
+
+      document.getElementById('aggroResult').innerHTML = 'Цель: —';
     }
 
     function calculateAggro() {
