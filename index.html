@@ -11,15 +11,13 @@
       --accent-dark: #55cc99;
       --bg-overlay: rgba(10, 20, 10, 0.85);
       --text-main: #e0ffe0;
-      --text-sub: #99bb99;
-    }
+      --text-sub: #99bb99; }
     * { box-sizing: border-box; }
     body {
       margin: 0; padding: 0;
       font-family: 'Bebas Neue', sans-serif;
       background: #0d0d0d url('https://images.steamusercontent.com/ugc/1771573146819330998/F47EDBD4BF74B56DB51F227933C4100408938AAE/') no-repeat center/cover fixed;
-      color: var(--text-main);
-    }
+      color: var(--text-main); }
     .container {
       background: var(--bg-overlay);
       border: 2px solid var(--accent);
@@ -27,20 +25,57 @@
       padding: 2rem 2.5rem;
       max-width: 820px;
       margin: 2rem auto;
-      box-shadow: 0 0 20px rgba(102,255,153,.4);
-    }
+      box-shadow: 0 0 20px rgba(102,255,153,.4); }
+    .field-hint {
+      display: block;
+      margin-top: 0.15rem;
+      color: var(--text-sub);
+      font-size: 0.9rem; }
+
+    .bonus-title {
+      margin-top: 0.5rem; }
+    .bonus-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.4rem 0.7rem;
+      margin-top: 0.35rem; }
+    .ally-bonus {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border: 1px solid var(--accent-dark);
+      border-radius: 6px;
+      background: rgba(10, 30, 15, 0.65);
+      white-space: nowrap; }
+
+    .result-section {
+      margin-top: 0.55rem; }
+    .result-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.4rem 0.7rem;
+      margin-top: 0.35rem; }
+    .result-badge {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border: 1px solid var(--accent-dark);
+      border-radius: 6px;
+      background: rgba(10, 30, 15, 0.65);
+      white-space: nowrap; }
+
+    input::placeholder { color: rgba(224, 255, 224, 0.45); }
+
     h1 { text-align: center; color: var(--accent); text-shadow: 0 0 5px #33ff77; font-size: 2.6rem; margin: 0 0 1rem; }
     h2 { margin: 2rem 0 0.5rem; font-size: 1.6rem; color: #aaffcc; border-bottom: 1px solid var(--accent); padding-bottom: 0.3rem; }
     label { display: block; margin-top: 1rem; font-size: 1.2rem; }
     input[type="number"], input[type="text"], select, input[type="range"] {
       width: 100%; padding: 0.75rem; font-size: 1.1rem; background: #111; color: var(--text-main);
-      border: 1px solid var(--accent-dark); border-radius: 6px; box-shadow: 0 0 5px rgba(102,255,153,.2);
-    }
+      border: 1px solid var(--accent-dark); border-radius: 6px; box-shadow: 0 0 5px rgba(102,255,153,.2); }
     input[type="range"] { cursor: pointer; }
     button {
       background: var(--accent-dark); color: #001f0f; border: none; padding: 0.8rem 1.6rem; font-size: 1.2rem; margin-top: 1.5rem;
-      border-radius: 6px; cursor: pointer; transition: .25s; box-shadow: 0 0 10px rgba(85,204,153,.4);
-    }
+      border-radius: 6px; cursor: pointer; transition: .25s; box-shadow: 0 0 10px rgba(85,204,153,.4); }
     button:hover { background: var(--accent); box-shadow: 0 0 14px rgba(85,255,170,.6); }
     .output { margin-top: 1rem; font-size: 1.4rem; text-align: center; color: #99ffcc; text-shadow: 0 0 3px #33ff77; }
     small { color: var(--text-sub); font-size: 0.9rem; }
@@ -51,6 +86,13 @@
     option[value="HE"] { color: gold; }
     option[value="WAW"] { color: violet; }
     option[value="ALEPH"] { color: red; }
+
+    .field-row { display: flex; gap: 1rem; align-items: flex-start; }
+    .field-half { width: 50%; }
+    .field-third { width: 33.333%; }
+    .field-half input,
+    .field-third input { width: 100%; }
+
     @media (max-width: 600px) {
       .container { padding: 1rem 1.2rem; margin: 1rem; max-width: 100%; }
       h1 { font-size: 2rem; }
@@ -59,7 +101,11 @@
       input[type="number"], input[type="text"], select, input[type="range"] { font-size: 0.95rem; padding: 0.6rem; }
       button { width: 100%; font-size: 1rem; padding: 0.7rem 1rem; }
       .output { font-size: 1.2rem; }
+      .field-row { flex-direction: column; gap: 0; }
+      .field-half,
+      .field-third { width: 100%; }
     }
+
   </style>
 </head>
 <body>
@@ -68,7 +114,16 @@
     <div class="block">
       <h2>Наносимый урон</h2>
       <label>Урон<input type="number" id="base"></label>
-      <label>Множители урона <small>(через запятую или пробел)</small><input type="text" id="multipliers"></label>
+    <div class="field-row">
+     <label class="field-half">Личные множители урона 
+      <small class="field-hint">Ваши процентные бонусы или ослабления</small>
+      <input type="text" id="multipliers" placeholder="Например: 50, 20, -30, -5">
+     </label>
+     <label class="field-half">Множители урона от союзников
+      <small class="field-hint">Процентные бонусы, полученные от союзников</small>
+      <input type="text" id="multipliers2" placeholder="Например: 10, 1.5, 12">
+     </label>
+    </div>
       <label>Дополнительный урон<input type="number" id="add" value="0"></label>
       <label>Скорость атаки<select id="speed" onchange="updateVisibility()">
         <option value="very_slow">Очень медленная</option>
@@ -84,7 +139,7 @@
       </div>
       <div id="onslaughtBlock" class="hidden">
         <label>Уровень Натиска<select id="onslaughtLevel">
-          <option value="1">Рвение</option><option value="2">I</option><option value="3">II</option><option value="4">III</option><option value="5">IV</option><option value="6">Рвение IV+</option><option value="7">Рвение IV++</option>
+          <option value="1">Рвение (60%)</option><option value="2">I (70%)</option><option value="3">II (80%)</option><option value="4">III (90%)</option><option value="5">IV (100%)</option><option value="6">Рвение IV+ (110%)</option><option value="7">Рвение IV++ (120%)</option>
         </select></label>
       </div>
       <div class="output" id="resultDealt">Нанесённый урон: —</div>
@@ -93,7 +148,19 @@
     </div>
     <div class="block">
       <h2>Получаемый урон</h2>
-      <label>Входящий урон<input type="number" id="incoming"></label>
+
+     <div class="field-row">
+      <label class="field-third">Входящий урон
+       <input type="number" id="incoming">
+      </label>
+      <label class="field-third">Личный щит
+       <input type="number" id="shield">
+      </label>
+      <label class="field-third">Щиты от союзников
+       <input type="text" id="shield2" placeholder="Например: 5, 10">
+      </label>
+     </div>
+
       <label>Тип входящего урона<select id="recType" onchange="updateVisibility()">
         <option value="raw">Обычный</option><option value="pale">Бледный</option>
       </select></label>
@@ -103,7 +170,18 @@
           <option value="0.25">Агент (0.25)</option><option value="1.0">Аномалия (1.0)</option><option value="0.4">Memento Mori (0.4)</option>
         </select></label>
       </div>
-      <label>Множители защиты <small>(через запятую или пробел)</small><input type="text" id="defMultipliers"></label>
+
+    <div class="field-row">
+     <label class="field-half">Личные множители защиты 
+      <small class="field-hint">Ваши процентные бонусы или ослабления</small>
+      <input type="text" id="defMultipliers" placeholder="Например: 50, 20, -30, -5">
+     </label>
+     <label class="field-half">Множители защиты от союзников
+      <small class="field-hint">Процентные бонусы, полученные от союзников</small>
+      <input type="text" id="defMultipliers2" placeholder="Например: 10, 1.5, 12">
+     </label>
+    </div>
+
       <label>Класс оружия<select id="weaponClass">
         <option value="ZAYIN">ZAYIN</option><option value="TETH">TETH</option><option value="HE">HE</option><option value="WAW">WAW</option><option value="ALEPH">ALEPH</option>
       </select></label>
@@ -120,7 +198,7 @@
 const justiceTable = { very_slow: [1,1.5,2,2.5,3], slow: [1,1.4,1.9,2.4,2.9], medium: [1,1.8,2.4,3,3.2] };
 const onslaughtTable = [0.6,0.7,0.8,0.9,1.0,1.1,1.2];
 const defTable = {ZAYIN:{ZAYIN:1,TETH:0.8,HE:0.7,WAW:0.6,ALEPH:0.4},TETH:{ZAYIN:1,TETH:1,HE:0.8,WAW:0.7,ALEPH:0.6},HE:{ZAYIN:1.2,TETH:1,HE:1,WAW:0.8,ALEPH:0.7},WAW:{ZAYIN:1.5,TETH:1.2,HE:1,WAW:1,ALEPH:0.8},ALEPH:{ZAYIN:2,TETH:1.5,HE:1.2,WAW:1,ALEPH:1}};
-function parseMultipliers(str) { return str.trim() ? str.split(/[\s,]+/).map(Number).filter(n => !isNaN(n)) : []; }
+function parseMultipliers(str = '') { return str.trim() ? str.split(/[\s,]+/).map(Number).filter(n => !isNaN(n)) : []; }
 function updateVisibility() {
   const s = document.getElementById('speed').value;
   const f = s === 'fast' || s === 'very_fast';
@@ -136,27 +214,169 @@ function getDefMult() {
   return defTable[document.getElementById('weaponClass').value][document.getElementById('armorClass').value];
 }
 function roundNearest(x) { return x >= 0 ? Math.floor(x + 0.5) : Math.ceil(x - 0.5); }
+
 function calcDealt() {
   const base = +document.getElementById('base').value || 0;
   const add = +document.getElementById('add').value || 0;
-  const sum = parseMultipliers(document.getElementById('multipliers').value).reduce((a,b)=>a+b,0);
-  const dealtRaw = (base * (sum / 100 + 1) + add) * getAttackMult();
-  document.getElementById('resultDealt').textContent = 'Нанесённый урон: ' + roundNearest(dealtRaw);
+
+  const personalList = parseMultipliers(document.getElementById('multipliers').value);
+  const allyList = parseMultipliers(document.getElementById('multipliers2').value)
+    .map(n => Math.max(0, n));
+
+  const personalSum = personalList.reduce((a, b) => a + b, 0);
+  const allySum = allyList.reduce((a, b) => a + b, 0);
+
+  const attackMult = getAttackMult();
+
+  const personalRaw = (base * (personalSum / 100 + 1) + add) * attackMult;
+  const totalRaw = (base * ((personalSum + allySum) / 100 + 1) + add) * attackMult;
+
+  const personalDamage = roundNearest(personalRaw);
+  const totalDamage = roundNearest(totalRaw);
+
+  const allyBonuses = allyList.map((percent, index) => {
+   const rawBonus = base * (percent / 100) * attackMult;
+   const roundedBonus = roundNearest(rawBonus);
+   const sign = roundedBonus >= 0 ? '+' : '';
+
+  return `<span class="ally-bonus">${percent}% = ${sign}${roundedBonus}</span>`;
+  });
+
+  const allyText = allyBonuses.length > 0
+    ? '<div class="bonus-title">Бонусы от союзников:</div>' +
+      '<div class="bonus-list">' + allyBonuses.join('') + '</div>'
+    : '<div class="bonus-title">Бонусы от союзников: —</div>';
+
+  document.getElementById('resultDealt').innerHTML =
+    'Итоговый урон: ' + totalDamage +
+    '<br>Личный урон: ' + personalDamage +
+    allyText;
 }
+
 function calcReceived() {
   let inc = +document.getElementById('incoming').value || 0;
+
   if (document.getElementById('recType').value === 'pale') {
     const maxHP = +document.getElementById('maxHP_recv').value || 0;
     const paleMult = +document.getElementById('paleSource_recv').value || 1;
-    inc = maxHP * ((inc * paleMult) / 100);
+    inc = maxHP * ((inc * paleMult) / 100); }
+
+  const personalShield = Math.max(0, +document.getElementById('shield').value || 0);
+  const allyShields = parseMultipliers(document.getElementById('shield2').value)
+    .map(n => Math.max(0, n));
+
+  const personalDefList = parseMultipliers(document.getElementById('defMultipliers').value)
+    .map(n => Math.min(99, n));
+  const allyDefList = parseMultipliers(document.getElementById('defMultipliers2').value)
+    .map(n => Math.min(99, Math.max(0, n)));
+
+  const originalIncoming = inc;
+
+  const allyShieldTotal = allyShields.reduce((a, b) => a + b, 0);
+  const allyBlockedTotal = Math.min(originalIncoming, allyShieldTotal);
+
+  function distributeAllyShields(shields, totalBlocked) {
+    const blocked = shields.map(() => 0);
+    let remaining = totalBlocked;
+    let active = shields
+      .map((value, index) => ({ value, index }))
+      .filter(item => item.value > 0);
+
+    while (remaining > 0 && active.length > 0) {
+      const share = remaining / active.length;
+      const capped = active.filter(item => item.value - blocked[item.index] <= share);
+
+      if (capped.length > 0) {
+        capped.forEach(item => {
+          const canBlock = item.value - blocked[item.index];
+          blocked[item.index] += canBlock;
+          remaining -= canBlock;
+        });
+
+        active = active.filter(item => !capped.includes(item));
+      } else {
+        active.forEach(item => {
+          blocked[item.index] += share;
+        });
+        remaining = 0;
+      }
+    }
+
+    return blocked;
   }
-  parseMultipliers(document.getElementById('defMultipliers').value).forEach(n => { inc *= (1 - n / 100); });
+
+  const allyBlockedList = distributeAllyShields(allyShields, allyBlockedTotal);
+
+  const incomingAfterAllyShields = Math.max(0, originalIncoming - allyShieldTotal);
+  const personalBlocked = Math.min(personalShield, incomingAfterAllyShields);
+
+  const incomingAfterShields = Math.max(0, originalIncoming - allyShieldTotal - personalShield);
+
+  const personalDefSum = personalDefList.reduce((a, b) => a + b, 0);
+  const allyDefSum = allyDefList.reduce((a, b) => a + b, 0);
+  const totalDefPercent = personalDefSum + allyDefSum;
+
+  const personalDefPreventedRaw = incomingAfterShields * (personalDefSum / 100);
+  const personalDefPrevented = Math.min(incomingAfterShields, Math.max(0, personalDefPreventedRaw));
+
+  const preventedDamage = personalBlocked + personalDefPrevented;
+  const preventedDamageMult = 1;
+  const preventedDamageShown = roundNearest(preventedDamage * preventedDamageMult);
+
+  const allyDefBadges = allyDefList.map((percent, index) => {
+    const rawReduction = incomingAfterShields * (percent / 100);
+    const roundedReduction = roundNearest(rawReduction);
+
+    return `<span class="result-badge">${index + 1}) ${percent}% = ${roundedReduction}</span>`;
+});
+
+inc = incomingAfterShields * (1 - totalDefPercent / 100);
+inc = Math.max(0, inc);
+
   const result = inc * getDefMult() * (+document.getElementById('res').value || 1);
-  document.getElementById('resultReceived').textContent = 'Полученный урон: ' + roundNearest(result);
+  const roundedResult = roundNearest(result);
+
+  const receivedShown = incomingAfterShields <= 0
+    ? 0
+    : Math.max(1, roundedResult);
+
+  const shieldBadges = [];
+
+  if (personalShield > 0) {
+    shieldBadges.push(
+      `<span class="result-badge">Свой = ${roundNearest(personalBlocked)}</span>`
+    );
+  }
+
+  allyBlockedList.forEach((blocked, index) => {
+    if (allyShields[index] > 0) {
+      shieldBadges.push(
+        `<span class="result-badge">${index + 1}: ${roundNearest(blocked)}</span>`
+      );
+    }
+  });
+
+  const shieldText = shieldBadges.length > 0
+    ? '<div class="result-section">Заблокировано щитами:</div>' +
+      '<div class="result-list">' + shieldBadges.join('') + '</div>'
+    : '<div class="result-section">Заблокировано щитами: —</div>';
+
+  const allyDefText = allyDefBadges.length > 0
+    ? '<div class="result-section">Снижено бонусами от союзников:</div>' +
+      '<div class="result-list">' + allyDefBadges.join('') + '</div>'
+    : '<div class="result-section">Снижено бонусами от союзников: —</div>';
+
+  document.getElementById('resultReceived').innerHTML =
+    'Полученный урон: ' + receivedShown +
+    '<br>Предотвращенный урон: ' + preventedDamageShown +
+    shieldText +
+    allyDefText;
 }
+
 function resetDealt() {
   document.getElementById('base').value = '';
   document.getElementById('multipliers').value = '';
+  document.getElementById('multipliers2').value = '';
   document.getElementById('add').value = '0';
   document.getElementById('speed').value = 'very_slow';
   document.getElementById('justiceLevel').value = '1';
@@ -174,6 +394,9 @@ function resetReceived() {
   document.getElementById('res').value = '1';
   document.getElementById('resValue').textContent = '1.0';
   document.getElementById('defMultipliers').value = '';
+  document.getElementById('defMultipliers2').value = '';
+  document.getElementById('shield').value = '';
+  document.getElementById('shield2').value = '';
   document.getElementById('resultReceived').textContent = 'Полученный урон: —';
   updateVisibility();
 }
