@@ -519,6 +519,10 @@
         margin-top: 0.4rem;
       }
     }
+
+    #aggroResult { transition: opacity 0.15s ease, transform 0.15s ease; }
+    #aggroResult.result-refresh { opacity: 0; transform: translateY(-4px); }
+
   </style>
 </head>
 
@@ -905,7 +909,7 @@
         const rawReduction = incomingAfterShields * (percent / 100);
         const roundedReduction = roundNearest(rawReduction);
 
-        return `<span class="result-badge">${index + 1}) ${percent}% = ${roundedReduction}</span>`;
+        return `<span class="result-badge">${percent}% = ${roundedReduction}</span>`;
       });
 
       inc = incomingAfterShields * (1 - totalDefPercent / 100);
@@ -1021,6 +1025,24 @@
       container.appendChild(row);
     }
 
+    let aggroRefreshTimer;
+
+    function refreshAggroResult(html) {
+      const resultBlock = document.getElementById('aggroResult');
+
+      clearTimeout(aggroRefreshTimer);
+
+      resultBlock.classList.add('result-refresh');
+
+      aggroRefreshTimer = setTimeout(() => {
+        resultBlock.innerHTML = html;
+
+        requestAnimationFrame(() => {
+          resultBlock.classList.remove('result-refresh');
+        });
+      }, 150);
+    }
+
     function removeAggroRow(button) {
       const row = button.closest('.aggro-row');
 
@@ -1033,7 +1055,6 @@
 
     function calculateAggro() {
       const rows = document.querySelectorAll('.aggro-row');
-      const resultBlock = document.getElementById('aggroResult');
 
       const entries = [];
 
@@ -1047,7 +1068,7 @@
       });
 
       if (entries.length === 0) {
-        resultBlock.innerHTML = 'Цель: —<br>Ошибка: нет целей с агро выше 0';
+        refreshAggroResult('Цель: —<br>Ошибка: нет целей с агро выше 0');
         return;
       }
 
@@ -1066,7 +1087,7 @@
         }
       }
 
-      resultBlock.innerHTML = 'Цель: ' + winner.name;
+      refreshAggroResult('Цель: ' + winner.name);
     }
 
     function resetAggro() {
