@@ -308,11 +308,6 @@
       text-align: center;
     }
 
-    .random-count-row span {
-      padding-bottom: 0.75rem;
-      font-size: 1.1rem;
-    }
-
     .button-row {
       display: flex;
       justify-content: center;
@@ -578,9 +573,19 @@
       <div class="block">
         <h2>Наносимый урон</h2>
 
-        <label>Урон
+        <div class="field-row">
+         <label class="field-third">Урон оружия
           <input type="number" id="base">
-        </label>
+         </label>
+           
+         <label class="field-third">Дополнительный урон
+          <input type="number" id="add" value="0">
+         </label>
+
+         <label class="field-third">Урон резонанса
+          <input type="number" id="ego">
+         </label>
+        </div>
 
         <div class="field-row">
           <label class="field-half">Личные множители урона
@@ -593,10 +598,6 @@
             <input type="text" id="multipliers2" placeholder="Например: 10, 1.5, 12">
           </label>
         </div>
-
-        <label>Дополнительный урон
-          <input type="number" id="add" value="0">
-        </label>
 
         <label>Скорость атаки
           <select id="speed" onchange="updateVisibility()">
@@ -660,21 +661,13 @@
         <label>Тип входящего урона
           <select id="recType" onchange="updateVisibility()">
             <option value="raw">Обычный</option>
-            <option value="pale">Бледный</option>
+            <option value="pale">Бледный (Аномалия)</option>
           </select>
         </label>
 
         <div id="paleBlock" class="hidden">
           <label>Максимум ХП юнита
             <input type="number" id="maxHP_recv">
-          </label>
-
-          <label>Кем наносится урон?
-            <select id="paleSource_recv">
-              <option value="0.25">Агент (0.25)</option>
-              <option value="1.0">Аномалия (1.0)</option>
-              <option value="0.4">Memento Mori (0.4)</option>
-            </select>
           </label>
         </div>
 
@@ -797,6 +790,7 @@
     function calcDealt() {
       const base = +document.getElementById('base').value || 0;
       const add = +document.getElementById('add').value || 0;
+      const ego = +document.getElementById('ego').value || 0;
 
       const personalList = parseMultipliers(document.getElementById('multipliers').value);
       const allyList = parseMultipliers(document.getElementById('multipliers2').value)
@@ -807,15 +801,19 @@
 
       const attackMult = getAttackMult();
 
-      const personalRaw = (base * (personalSum / 100 + 1) + add) * attackMult;
-      const totalRaw = (base * ((personalSum + allySum) / 100 + 1) + add) * attackMult;
-
+      const egoRaw = ego * (personalSum / 100 + 1);
+      const egoTotal = ego * ((personalSum + allySum) / 100 + 1);
+      const personalRaw = egoRaw + (base * (personalSum / 100 + 1) + add) * attackMult;
+      const totalRaw = egoTotal + (base * ((personalSum + allySum) / 100 + 1) + add) * attackMult;
+      
       const personalDamage = roundNearest(personalRaw);
       const totalDamage = roundNearest(totalRaw);
 
       const allyBonuses = allyList.map((percent) => {
         const rawBonus = base * (percent / 100) * attackMult;
-        const roundedBonus = roundNearest(rawBonus);
+        const egoBonus = ego * (percent / 100);
+        const totalBonus = (rawBonus + egoBonus);
+        const roundedBonus = roundNearest(totalBonus);
         const sign = roundedBonus >= 0 ? '+' : '';
 
         return `<span class="ally-bonus">${percent}% = ${sign}${roundedBonus}</span>`;
@@ -837,7 +835,7 @@
 
       if (document.getElementById('recType').value === 'pale') {
         const maxHP = +document.getElementById('maxHP_recv').value || 0;
-        const paleMult = +document.getElementById('paleSource_recv').value || 1;
+        const paleMult = 1;
         inc = maxHP * ((inc * paleMult) / 100);
       }
 
@@ -960,6 +958,7 @@
       document.getElementById('multipliers').value = '';
       document.getElementById('multipliers2').value = '';
       document.getElementById('add').value = '0';
+      document.getElementById('ego').value = '';
       document.getElementById('speed').value = 'very_slow';
       document.getElementById('justiceLevel').value = '1';
       document.getElementById('onslaughtLevel').value = '1';
@@ -971,7 +970,6 @@
       document.getElementById('incoming').value = '';
       document.getElementById('recType').value = 'raw';
       document.getElementById('maxHP_recv').value = '';
-      document.getElementById('paleSource_recv').value = '0.25';
       document.getElementById('weaponClass').value = 'ZAYIN';
       document.getElementById('armorClass').value = 'ZAYIN';
       document.getElementById('res').value = '1';
