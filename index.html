@@ -579,7 +579,7 @@
          </label>
            
          <label class="field-third">Дополнительный урон
-          <input type="number" id="add" value="0">
+          <input type="number" id="add">
          </label>
 
          <label class="field-third">Урон резонанса
@@ -588,14 +588,19 @@
         </div>
 
         <div class="field-row">
-          <label class="field-half">Личные множители урона
-            <small class="field-hint">Ваши процентные бонусы или ослабления</small>
-            <input type="text" id="multipliers" placeholder="Например: 50, 20, -30, -5">
+          <label class="field-third">Личные бонусы урона
+            <small class="field-hint">Ваши процентные множители урона</small>
+            <input type="text" id="multipliers" placeholder="Например: 50, 20, 30, 5">
           </label>
 
-          <label class="field-half">Множители урона от союзников
-            <small class="field-hint">Процентные бонусы, полученные от союзников</small>
+          <label class="field-third">Бонусы от союзников
+            <small class="field-hint">Процентные множители, полученные от союзников</small>
             <input type="text" id="multipliers2" placeholder="Например: 10, 1.5, 12">
+          </label>
+
+          <label class="field-third">Ослабления
+            <small class="field-hint">Ваши процентные ослабления урона</small>
+            <input type="text" id="debuffs1" placeholder="Например: -10, -5, -20">
           </label>
         </div>
 
@@ -672,14 +677,19 @@
         </div>
 
         <div class="field-row">
-          <label class="field-half">Личные множители защиты
-            <small class="field-hint">Ваши процентные бонусы или ослабления</small>
-            <input type="text" id="defMultipliers" placeholder="Например: 50, 20, -30, -5">
+          <label class="field-third">Личные бонусы защиты
+            <small class="field-hint">Ваши процентные множители защиты</small>
+            <input type="text" id="defMultipliers" placeholder="Например: 50, 20, 30, 5">
           </label>
 
-          <label class="field-half">Множители защиты от союзников
-            <small class="field-hint">Процентные бонусы, полученные от союзников</small>
+          <label class="field-third">Бонусы от союзников
+            <small class="field-hint">Процентные множители, полученные от союзников</small>
             <input type="text" id="defMultipliers2" placeholder="Например: 10, 1.5, 12">
+          </label>
+
+          <label class="field-third">Ослабления
+            <small class="field-hint">Ваши процентные ослабления защиты</small>
+            <input type="text" id="debuffs2" placeholder="Например: -10, -5, -20">
           </label>
         </div>
 
@@ -792,19 +802,23 @@
       const add = +document.getElementById('add').value || 0;
       const ego = +document.getElementById('ego').value || 0;
 
-      const personalList = parseMultipliers(document.getElementById('multipliers').value);
+      const personalList = parseMultipliers(document.getElementById('multipliers').value)
+        .map(n => Math.max(0, n));
       const allyList = parseMultipliers(document.getElementById('multipliers2').value)
         .map(n => Math.max(0, n));
+      const enemyAtkList = parseMultipliers(document.getElementById('debuffs1').value)
+        .map(n => -Math.abs(n));
 
       const personalSum = personalList.reduce((a, b) => a + b, 0);
       const allySum = allyList.reduce((a, b) => a + b, 0);
+      const enemyAtkSum = enemyAtkList.reduce((a, b) => a + b, 0);
 
       const attackMult = getAttackMult();
 
-      const egoRaw = ego * (personalSum / 100 + 1);
-      const egoTotal = ego * ((personalSum + allySum) / 100 + 1);
-      const personalRaw = egoRaw + (base * (personalSum / 100 + 1) + add) * attackMult;
-      const totalRaw = egoTotal + (base * ((personalSum + allySum) / 100 + 1) + add) * attackMult;
+      const egoRaw = ego * ((personalSum + enemyAtkSum) / 100 + 1);
+      const egoTotal = ego * ((personalSum + allySum + enemyAtkSum) / 100 + 1);
+      const personalRaw = egoRaw + (base * ((personalSum + enemyAtkSum) / 100 + 1) + add) * attackMult;
+      const totalRaw = egoTotal + (base * ((personalSum + allySum + enemyAtkSum) / 100 + 1) + add) * attackMult;
       
       const personalDamage = roundNearest(personalRaw);
       const totalDamage = roundNearest(totalRaw);
@@ -824,10 +838,26 @@
           '<div class="bonus-list">' + allyBonuses.join('') + '</div>'
         : '<div class="bonus-title">Бонусы от союзников: —</div>';
 
+      const attackDebuffs = enemyAtkList.map((percent) => {
+        const rawAtkDebuff = base * (percent / 100) * attackMult;
+        const egoAtkDebuff = ego * (percent / 100);
+        const totalAtkDebuff = (rawAtkDebuff + egoAtkDebuff);
+        const roundedAtkDebuff = roundNearest(totalAtkDebuff);
+        const sign = roundedAtkDebuff >= 0 ? '+' : '';
+
+        return `<span class="result-badge">${percent}% = ${sign}${roundedAtkDebuff}</span>`;
+      });
+
+      const attackText = attackDebuffs.length > 0
+        ? '<div class="bonus-title">Снижение наносимого урона:</div>' +
+          '<div class="bonus-list">' + attackDebuffs.join('') + '</div>'
+        : '<div class="bonus-title">Снижение наносимого урона: —</div>';
+
       document.getElementById('resultDealt').innerHTML =
         'Итоговый урон: ' + totalDamage +
         '<br>Личный урон: ' + personalDamage +
-        allyText;
+        allyText +
+        attackText;
     }
 
     function calcReceived() {
@@ -844,10 +874,11 @@
         .map(n => Math.max(0, n));
 
       const personalDefList = parseMultipliers(document.getElementById('defMultipliers').value)
-        .map(n => Math.min(99, n));
-
+        .map(n => Math.min(99, Math.max(0, n)));
       const allyDefList = parseMultipliers(document.getElementById('defMultipliers2').value)
         .map(n => Math.min(99, Math.max(0, n)));
+      const enemyDefList = parseMultipliers(document.getElementById('debuffs2').value)
+        .map(n => -Math.abs(n));
 
       const originalIncoming = inc;
 
@@ -894,7 +925,8 @@
 
       const personalDefSum = personalDefList.reduce((a, b) => a + b, 0);
       const allyDefSum = allyDefList.reduce((a, b) => a + b, 0);
-      const totalDefPercent = personalDefSum + allyDefSum;
+      const enemyDefSum = enemyDefList.reduce((a, b) => a + b, 0);
+      const totalDefPercent = personalDefSum + allyDefSum + enemyDefSum;
 
       const personalDefPreventedRaw = incomingAfterShields * (personalDefSum / 100);
       const personalDefPrevented = Math.min(incomingAfterShields, Math.max(0, personalDefPreventedRaw));
@@ -903,11 +935,18 @@
       const preventedDamageMult = 1;
       const preventedDamageShown = roundNearest(preventedDamage * preventedDamageMult);
 
-      const allyDefBadges = allyDefList.map((percent, index) => {
+      const allyDefBonuses = allyDefList.map((percent, index) => {
         const rawReduction = incomingAfterShields * (percent / 100);
         const roundedReduction = roundNearest(rawReduction);
 
         return `<span class="result-badge">${percent}% = ${roundedReduction}</span>`;
+      });
+
+      const enemyDefDebuffs = enemyDefList.map((percent, index) => {
+        const rawDefDebuffs = incomingAfterShields * (percent / 100);
+        const roundedDefDebuffs = Math.abs(roundNearest(rawDefDebuffs));
+
+        return `<span class="result-badge">${percent}% = +${roundedDefDebuffs}</span>`;
       });
 
       inc = incomingAfterShields * (1 - totalDefPercent / 100);
@@ -941,23 +980,30 @@
           '<div class="result-list">' + shieldBadges.join('') + '</div>'
         : '<div class="result-section">Заблокировано щитами: —</div>';
 
-      const allyDefText = allyDefBadges.length > 0
+      const allyDefText = allyDefBonuses.length > 0
         ? '<div class="result-section">Снижено бонусами от союзников:</div>' +
-          '<div class="result-list">' + allyDefBadges.join('') + '</div>'
+          '<div class="result-list">' + allyDefBonuses.join('') + '</div>'
         : '<div class="result-section">Снижено бонусами от союзников: —</div>';
+
+      const enemyDefText = enemyDefDebuffs.length > 0
+        ? '<div class="result-section">Увеличение получаемого урона:</div>' +
+          '<div class="result-list">' + enemyDefDebuffs.join('') + '</div>'
+        : '<div class="result-section">Увеличение получаемого урона: —</div>';
 
       document.getElementById('resultReceived').innerHTML =
         'Полученный урон: ' + receivedShown +
         '<br>Предотвращенный урон: ' + preventedDamageShown +
         shieldText +
-        allyDefText;
+        allyDefText +
+        enemyDefText;
     }
 
     function resetDealt() {
       document.getElementById('base').value = '';
       document.getElementById('multipliers').value = '';
       document.getElementById('multipliers2').value = '';
-      document.getElementById('add').value = '0';
+      document.getElementById('debuffs1').value = '';
+      document.getElementById('add').value = '';
       document.getElementById('ego').value = '';
       document.getElementById('speed').value = 'very_slow';
       document.getElementById('justiceLevel').value = '1';
@@ -976,6 +1022,7 @@
       document.getElementById('resValue').textContent = '1.0';
       document.getElementById('defMultipliers').value = '';
       document.getElementById('defMultipliers2').value = '';
+      document.getElementById('debuffs2').value = '';
       document.getElementById('shield').value = '';
       document.getElementById('shield2').value = '';
       document.getElementById('resultReceived').textContent = 'Полученный урон: —';
