@@ -869,6 +869,8 @@
         inc = maxHP * ((inc * paleMult) / 100);
       }
 
+      const originalIncoming = Math.max(0, inc);
+
       const personalShield = Math.max(0, +document.getElementById('shield').value || 0);
       const allyShields = parseMultipliers(document.getElementById('shield2').value)
         .map(n => Math.max(0, n));
@@ -879,8 +881,6 @@
         .map(n => Math.min(99, Math.max(0, n)));
       const enemyDefList = parseMultipliers(document.getElementById('debuffs2').value)
         .map(n => -Math.abs(n));
-
-      const originalIncoming = inc;
 
       const allyShieldTotal = allyShields.reduce((a, b) => a + b, 0);
       const allyBlockedTotal = Math.min(originalIncoming, allyShieldTotal);
@@ -908,7 +908,6 @@
             active.forEach(item => {
               blocked[item.index] += share;
             });
-
             remaining = 0;
           }
         }
@@ -917,61 +916,87 @@
       }
 
       const allyBlockedList = distributeAllyShields(allyShields, allyBlockedTotal);
-
-      const incomingAfterAllyShields = Math.max(0, originalIncoming - allyShieldTotal);
+      const incomingAfterAllyShields = Math.max(0, originalIncoming - allyBlockedTotal);
       const personalBlocked = Math.min(personalShield, incomingAfterAllyShields);
-
-      const incomingAfterShields = Math.max(0, originalIncoming - allyShieldTotal - personalShield);
+      const incomingAfterShields = Math.max(0, incomingAfterAllyShields - personalBlocked);
 
       const personalDefSum = personalDefList.reduce((a, b) => a + b, 0);
       const allyDefSum = allyDefList.reduce((a, b) => a + b, 0);
-      const enemyDefSum = enemyDefList.reduce((a, b) => a + b, 0);
-      const totalDefPercent = personalDefSum + allyDefSum + enemyDefSum;
+      const totalDefPercent = personalDefSum + allyDefSum;
 
-      const personalDefPreventedRaw = incomingAfterShields * (personalDefSum / 100);
-      const personalDefPrevented = Math.min(incomingAfterShields, Math.max(0, personalDefPreventedRaw));
-      
+      const defenseMult = Math.max(0, 1 - totalDefPercent / 100);
       const classMult = getDefMult();
-      const classPreventedRaw = classMult < 1
-        ? incomingAfterShields * (1 - classMult)
-        : 0;
-      const classPrevented = Math.max(0, classPreventedRaw);
-
-      const classTotalize = incomingAfterShields - classPrevented;
-
       const resilience = +document.getElementById('res').value || 1;
-      const resilPreventedRaw = resilience < 1
-        ? classTotalize * (1 - resilience)
+
+      const enemyDebuffsSum = enemyDefList.reduce((a, b) => a + b, 0);
+      const enemySum = Math.max(0, 1 - enemyDebuffsSum / 100);
+
+      const modifiers = [
+        { type: 'defense', multiplier: defenseMult },
+        { type: 'class', multiplier: classMult },
+        { type: 'resilience', multiplier: resilience },
+        { type: 'debuff', multiplier: enemySum }
+      ];
+
+      modifiers.sort((a, b) => b.multiplier - a.multiplier);
+
+      let damage = incomingAfterShields;
+      let preventedDamage = 0;
+      let damageBeforeDefense = damage;
+      let defensePrevented = 0;
+      let debuffIncrease = 0;
+
+      modifiers.forEach(mod => {
+        const before = damage;
+        damage *= mod.multiplier;
+        const after = damage;
+
+        if (mod.type === 'defense') {
+          damageBeforeDefense = before;
+          if (mod.multiplier < 1) {
+            defensePrevented = before - after;
+          }
+        } else if (mod.type === 'class' && mod.multiplier < 1) {
+          preventedDamage += roundNearest(before - after);
+        } else if (mod.type === 'resilience' && mod.multiplier < 1) {
+          preventedDamage += roundNearest(before - after);
+        }
+
+        if (mod.type === 'debuff' && mod.multiplier > 1) {
+          debuffIncrease = after - before;
+        }
+      });
+
+      const personalDefPrevented = totalDefPercent > 0
+        ? damageBeforeDefense * (personalDefSum / 100)
         : 0;
-      const resilPrevented = Math.max(0, resilPreventedRaw);
 
-      const preventedDamage = personalBlocked + personalDefPrevented + classPrevented + resilPrevented;    
-      const preventedDamageMult = 1;
-      const preventedDamageShown = roundNearest(preventedDamage * preventedDamageMult);
+      preventedDamage += personalBlocked;
 
-      const allyDefBonuses = allyDefList.map((percent, index) => {
-        const rawReduction = incomingAfterShields * (percent / 100);
+      if (defenseMult < 1) {
+        preventedDamage += roundNearest(personalDefPrevented);
+      }
+
+      const receivedShown = damage <= 0
+        ? 0
+        : Math.max(1, roundNearest(damage));
+
+      const preventedDamageShown = Math.max(0, roundNearest(preventedDamage));
+
+      const allyDefBonuses = allyDefList.map(percent => {
+        const rawReduction = damageBeforeDefense * (percent / 100);
         const roundedReduction = roundNearest(rawReduction);
-
         return `<span class="result-badge">${percent}% = ${roundedReduction}</span>`;
       });
 
-      const enemyDefDebuffs = enemyDefList.map((percent, index) => {
-        const rawDefDebuffs = incomingAfterShields * (percent / 100);
+      const enemyDefDebuffs = enemyDefList.map(percent => {
+        const share = Math.abs(enemyDebuffsSum) > 0
+          ? Math.abs(percent) / Math.abs(enemyDebuffsSum)
+          : 0;
+        const rawDefDebuffs = debuffIncrease * share;
         const roundedDefDebuffs = Math.abs(roundNearest(rawDefDebuffs));
-
         return `<span class="result-badge">${percent}% = +${roundedDefDebuffs}</span>`;
       });
-
-      inc = incomingAfterShields * (1 - totalDefPercent / 100);
-      inc = Math.max(0, inc);
-
-      const result = inc * classMult * resilience;
-      const roundedResult = roundNearest(result);
-
-      const receivedShown = incomingAfterShields <= 0
-        ? 0
-        : Math.max(1, roundedResult);
 
       const shieldBadges = [];
 
@@ -990,9 +1015,9 @@
       });
 
       const shieldText = shieldBadges.length > 0
-        ? '<div class="result-section">Заблокировано щитами:</div>' +
+        ? '<div class="result-section">Использованные щиты:</div>' +
           '<div class="result-list">' + shieldBadges.join('') + '</div>'
-        : '<div class="result-section">Заблокировано щитами: —</div>';
+        : '<div class="result-section">Использованные щиты: —</div>';
 
       const allyDefText = allyDefBonuses.length > 0
         ? '<div class="result-section">Снижено бонусами от союзников:</div>' +
