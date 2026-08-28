@@ -937,7 +937,13 @@
         : 0;
       const resilPrevented = Math.max(0, resilPreventedRaw);
 
-      const preventedDamage = personalBlocked + personalDefPrevented + resilPrevented;    
+      const classMult = getDefMult();
+      const classPreventedRaw = classMult < 1
+        ? incomingAfterShields * (1 - classMult)
+        : 0;
+      const classPrevented = Math.max(0, classPreventedRaw);
+
+      const preventedDamage = personalBlocked + personalDefPrevented + resilPrevented + classPrevented;    
       const preventedDamageMult = 1;
       const preventedDamageShown = roundNearest(preventedDamage * preventedDamageMult);
 
@@ -958,7 +964,7 @@
       inc = incomingAfterShields * (1 - totalDefPercent / 100);
       inc = Math.max(0, inc);
 
-      const result = inc * getDefMult() * (+document.getElementById('res').value || 1);
+      const result = inc * classMult * resilience;
       const roundedResult = roundNearest(result);
 
       const receivedShown = incomingAfterShields <= 0
