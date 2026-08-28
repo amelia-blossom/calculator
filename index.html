@@ -930,8 +930,14 @@
 
       const personalDefPreventedRaw = incomingAfterShields * (personalDefSum / 100);
       const personalDefPrevented = Math.min(incomingAfterShields, Math.max(0, personalDefPreventedRaw));
+      
+      const resilience = +document.getElementById('res').value || 1;
+      const resilPreventedRaw = resilience < 1
+        ? incomingAfterShields * (1 - resilience)
+        : 0;
+      const resilPrevented = Math.max(0, resilPreventedRaw);
 
-      const preventedDamage = personalBlocked + personalDefPrevented;
+      const preventedDamage = personalBlocked + personalDefPrevented + resilPrevented;    
       const preventedDamageMult = 1;
       const preventedDamageShown = roundNearest(preventedDamage * preventedDamageMult);
 
